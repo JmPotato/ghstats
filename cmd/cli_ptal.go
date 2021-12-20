@@ -51,10 +51,10 @@ func newPTALCommand() *cobra.Command {
 				}
 			}
 			buf := strings.Builder{}
-			// To keep message short, we only keep the most recent 5 PRs.
-			max := 5
-			count := 0
+			// To keep message short, we only keep the most recent 10 PRs.
+			max := 10
 			for repo, results := range projects {
+				count := 0
 				prs := strings.Builder{}
 				for _, res := range results {
 					for _, issue := range res.Issues {
@@ -73,8 +73,8 @@ func newPTALCommand() *cobra.Command {
 							markdown.Link(fmt.Sprintf("#%d", *issue.Number), *issue.HTMLURL),
 							markdown.Escape(*issue.Title),
 						))
+						count++
 					}
-					count++
 				}
 				if prs.Len() != 0 {
 					buf.WriteString(fmt.Sprintf("## %s\n", markdown.Escape(repo)))
