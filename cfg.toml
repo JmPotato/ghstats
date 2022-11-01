@@ -11,7 +11,7 @@ allow-users = [
   "CabinfeverB",
   "Yisaer",
   "LLThomas",
-  'HuSharp'
+  "HuSharp",
 ]
 block-comments = [
   "/run-",
