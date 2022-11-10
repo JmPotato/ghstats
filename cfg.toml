@@ -10,8 +10,9 @@ allow-users = [
   "bufferflies",
   "CabinfeverB",
   "Yisaer",
-  "LLThomas",
   "HuSharp",
+  "Connor1996",
+  "matchge-ca",
 ]
 block-comments = [
   "/run-",
