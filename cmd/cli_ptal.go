@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/google/go-github/v35/github"
+	"github.com/google/go-github/v50/github"
 	"github.com/overvenus/ghstats/pkg/config"
 	"github.com/overvenus/ghstats/pkg/feishu"
 	"github.com/overvenus/ghstats/pkg/gh"
@@ -43,7 +43,7 @@ func newPTALCommand() *cobra.Command {
 			projects := make(map[string][]*github.IssuesSearchResult)
 			for _, proj := range cfg.Repos {
 				for _, query := range proj.PRQuery {
-					results, err := gh.SearchIssues(ctx, client, query)
+					results, err := gh.SearchIssues(ctx, client, fmt.Sprintf("repo:%s is:pull-request", strings.TrimSpace(query)))
 					if err != nil {
 						return err
 					}

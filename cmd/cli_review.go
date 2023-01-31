@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/go-github/v35/github"
+	"github.com/google/go-github/v50/github"
 	"github.com/overvenus/ghstats/pkg/config"
 	"github.com/overvenus/ghstats/pkg/debug"
 	"github.com/overvenus/ghstats/pkg/feishu"
@@ -136,13 +136,12 @@ func reviewRange(cmd *cobra.Command, kind string, start, end time.Time) error {
 		// updated:2021-05-23T21:00:00+08:00..2021-05-24T21:00:00+08:00
 		currentRFC3339 := current.Format(time.RFC3339)
 		nextRFC3339 := next.Format(time.RFC3339)
-		updateRange := fmt.Sprintf(" updated:%s..%s", currentRFC3339, nextRFC3339)
+		updateRange := fmt.Sprintf("updated:%s..%s", currentRFC3339, nextRFC3339)
 		fmt.Printf("[%s] %s -%s\n", time.Now().Format(time.RFC3339), kind, updateRange)
 		projects := make(map[string][]*github.IssuesSearchResult)
 		for _, proj := range cfg.Repos {
 			for _, query := range proj.PRQuery {
-				query = strings.TrimSpace(query)
-				query += updateRange
+				query = fmt.Sprintf("%s %s is:pull-request", strings.TrimSpace(query), updateRange)
 				log.Info("query: ", query)
 				results, err := gh.SearchIssues(ctx, client, query)
 				if err != nil {
@@ -389,20 +388,21 @@ func collectPRLGTM(
 		}
 		log.Debug("LGTM: ", debug.PrettyFormat(prReviews))
 		for _, prReview := range prReviews {
-			if c.isUserBlocked(*prReview.User.Login) {
+			login := prReview.GetUser().GetLogin()
+			if c.isUserBlocked(login) {
 				continue
 			}
-			if *prReview.User.Login == *issue.User.Login {
+			if login == issue.GetUser().GetLogin() {
 				// Do not count author's comments.
 				continue
 			}
-			if !c.withinTimeRange(*prReview.SubmittedAt) {
+			if !c.withinTimeRange(prReview.GetSubmittedAt().Time) {
 				continue
 			}
-			if *prReview.State == "APPROVED" || c.isCommentLGTM(*prReview.Body) {
-				review := reviews[*prReview.User.Login]
+			if prReview.GetState() == "APPROVED" || c.isCommentLGTM(prReview.GetBody()) {
+				review := reviews[login]
 				review.prLGTMs++
-				reviews[*prReview.User.Login] = review
+				reviews[login] = review
 			}
 		}
 	}
@@ -430,14 +430,15 @@ func collectPRReviewComments(
 		}
 		log.Debug("reviews: ", debug.PrettyFormat(prReviews))
 		for _, prReview := range prReviews {
-			if c.isUserBlocked(*prReview.User.Login) {
+			login := prReview.GetUser().GetLogin()
+			if c.isUserBlocked(login) {
 				continue
 			}
-			if *prReview.User.Login == *issue.User.Login {
+			if login == issue.GetUser().GetLogin() {
 				// Do not count author's comments.
 				continue
 			}
-			if !c.withinTimeRange(*prReview.SubmittedAt) {
+			if !c.withinTimeRange(prReview.GetSubmittedAt().Time) {
 				continue
 			}
 
@@ -445,9 +446,9 @@ func collectPRReviewComments(
 			if err != nil {
 				return err
 			}
-			review := reviews[*prReview.User.Login]
+			review := reviews[login]
 			review.prComments += len(reviewComments)
-			reviews[*prReview.User.Login] = review
+			reviews[login] = review
 		}
 	}
 
@@ -473,20 +474,22 @@ func collectIssueAndPRComments(
 		}
 		log.Debug("comments: ", debug.PrettyFormat(comments))
 		for _, comment := range comments {
-			if c.isUserBlocked(*comment.User.Login) {
+			login := comment.GetUser().GetLogin()
+			if c.isUserBlocked(login) {
 				continue
 			}
-			if *comment.User.Login == *issue.User.Login {
+			if login == issue.GetUser().GetLogin() {
 				// Do not count author's comments.
 				continue
 			}
-			if c.isCommentBlocked(*comment.Body) {
+			body := comment.GetBody()
+			if c.isCommentBlocked(body) {
 				continue
 			}
-			if c.withinTimeRange(*comment.CreatedAt) || c.withinTimeRange(*comment.UpdatedAt) {
-				review := reviews[*comment.User.Login]
+			if c.withinTimeRange(comment.GetCreatedAt().Time) || c.withinTimeRange(comment.GetUpdatedAt().Time) {
+				review := reviews[login]
 				if issue.IsPullRequest() {
-					if c.isCommentLGTM(*comment.Body) {
+					if c.isCommentLGTM(body) {
 						review.prLGTMs++
 					} else {
 						review.prComments++
@@ -494,7 +497,7 @@ func collectIssueAndPRComments(
 				} else {
 					review.issueComments++
 				}
-				reviews[*comment.User.Login] = review
+				reviews[login] = review
 			}
 		}
 	}
@@ -510,15 +513,16 @@ func collectIssueCreates(
 	reviews map[string]review,
 ) error {
 	for _, issue := range issues {
-		if c.isUserBlocked(*issue.User.Login) {
+		login := issue.GetUser().GetLogin()
+		if c.isUserBlocked(login) {
 			continue
 		}
-		if c.withinTimeRange(*issue.CreatedAt) {
-			review := reviews[*issue.User.Login]
+		if c.withinTimeRange(issue.GetCreatedAt().Time) {
+			review := reviews[login]
 			if !issue.IsPullRequest() {
 				review.issueCreates++
 			}
-			reviews[*issue.User.Login] = review
+			reviews[login] = review
 		}
 	}
 	return nil
