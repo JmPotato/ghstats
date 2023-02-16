@@ -13,6 +13,9 @@ allow-users = [
   "HuSharp",
   "Connor1996",
   "matchge-ca",
+  "innerr",
+  "hnes",
+  "binshi-bing",
 ]
 block-comments = [
   "/run-",
