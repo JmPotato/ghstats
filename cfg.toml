@@ -21,6 +21,8 @@ block-comments = [
   "/run-",
   "/merge",
   "/rebuild",
+  "/ok-to-test",
+  "/test build",
 ]
 block-labels = [
   "cherry-pick-approved",
@@ -65,5 +67,11 @@ repo:pingcap/tidb
 """,
   """
 repo:pingcap/kvproto
+""",
+  """
+repo:pingcap/docs
+""",
+  """
+repo:pingcap/docs-cn
 """,
 ]
