@@ -37,6 +37,7 @@ block-users = [
   "codecov-commenter",
   "CLAassistant",
   "hound[bot]",
+  "dependabot[bot]",
 ]
 lgtm-comments = [
   "/lgtm",
