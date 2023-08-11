@@ -1,7 +1,6 @@
 [review]
 allow-users = [
   "nolouch",
-  "HunDunDM",
   "rleungx",
   "disksing",
   "JmPotato",
@@ -9,13 +8,11 @@ allow-users = [
   "AndreMouche",
   "bufferflies",
   "CabinfeverB",
-  "Yisaer",
   "HuSharp",
   "Connor1996",
   "matchge-ca",
-  "innerr",
-  "hnes",
-  "binshi-bing",
+  "glorv",
+  "niubell",
 ]
 block-comments = [
   "/run-",
