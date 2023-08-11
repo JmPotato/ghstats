@@ -18,6 +18,8 @@ block-comments = [
   "/run-",
   "/merge",
   "/rebuild",
+  "/ok-to-test",
+  "/test build",
 ]
 block-labels = [
   "cherry-pick-approved",
@@ -32,6 +34,7 @@ block-users = [
   "codecov-commenter",
   "CLAassistant",
   "hound[bot]",
+  "dependabot[bot]",
 ]
 lgtm-comments = [
   "/lgtm",
@@ -62,5 +65,11 @@ repo:pingcap/tidb
 """,
   """
 repo:pingcap/kvproto
+""",
+  """
+repo:pingcap/docs
+""",
+  """
+repo:pingcap/docs-cn
 """,
 ]
