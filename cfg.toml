@@ -18,6 +18,11 @@ block-comments = [
   "/run-",
   "/merge",
   "/rebuild",
+  "/ok-to-test",
+  "/test",
+  "/retest",
+  "/hold",
+  "/unhold",
 ]
 block-labels = [
   "cherry-pick-approved",
