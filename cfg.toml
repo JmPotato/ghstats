@@ -14,6 +14,8 @@ allow-users = [
   "glorv",
   "niubell",
   "okJiang",
+  "ystaticy",
+  "liyishuai",
 ]
 block-comments = [
   "/run-",
@@ -25,10 +27,7 @@ block-comments = [
   "/hold",
   "/unhold",
 ]
-block-labels = [
-  "cherry-pick-approved",
-  "status/can-merge",
-]
+block-labels = ["cherry-pick-approved", "status/can-merge"]
 block-users = [
   "sre-bot",
   "ti-chi-bot",
@@ -39,10 +38,7 @@ block-users = [
   "CLAassistant",
   "hound[bot]",
 ]
-lgtm-comments = [
-  "/lgtm",
-  "LGTM",
-]
+lgtm-comments = ["/lgtm", "LGTM"]
 
 # Could also be set with the environment variable:
 #   - GHSTATS_GITHUB_TOKEN
@@ -53,20 +49,14 @@ github-token = ""
 
 [[review.repos]]
 name = "PD"
-pr-query = [
-  """
+pr-query = ["""
 repo:tikv/pd
-""",
-  """
+""", """
 repo:tikv/client-go
-""",
-  """
+""", """
 repo:tikv/tikv
-""",
-  """
+""", """
 repo:pingcap/tidb
-""",
-  """
+""", """
 repo:pingcap/kvproto
-""",
-]
+"""]
