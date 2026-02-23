@@ -159,7 +159,7 @@ func reviewRange(cmd *cobra.Command, kind string, start, end time.Time) error {
 				}
 				err := collectReviews(ctx, c, client, res.Issues, reviews)
 				if err != nil {
-					panic(err)
+					return err
 				}
 			}
 		}
@@ -211,8 +211,14 @@ func reviewRange(cmd *cobra.Command, kind string, start, end time.Time) error {
 	}
 	buf.WriteString(fmt.Sprintf("\n[%s, %s]", start.Format(timeFormat), end.Format(timeFormat)))
 	log.Debug("reviews: ", buf.String())
+	title := fmt.Sprintf("Review Top %d 👍 - %s", topN, kind)
+	cmd.Println(title)
+	cmd.Println(buf.String())
+	if cfg.FeishuWebhookToken == "" {
+		return nil
+	}
 	bot := feishu.WebhookBot(cfg.FeishuWebhookToken)
-	return bot.SendMarkdownMessage(ctx, fmt.Sprintf("Review Top %d 👍 - %s", topN, kind), buf.String(), feishu.TitleColorGreen)
+	return bot.SendMarkdownMessage(ctx, title, buf.String(), feishu.TitleColorGreen)
 }
 
 type review struct {
@@ -353,8 +359,7 @@ func collectReviews(
 ) error {
 	collectors := []collector{
 		collectIssueCreates,
-		collectPRLGTM,
-		collectPRReviewComments,
+		collectPRLGTMAndReviewComments,
 		collectIssueAndPRComments,
 	}
 	for _, collect := range collectors {
@@ -366,51 +371,9 @@ func collectReviews(
 	return nil
 }
 
-// Collect review.prLGTM.
+// Collect review.prLGTM and review.prComments in a single pass.
 // LGTM is an APPROVED PR review or a review summary is LGTM.
-func collectPRLGTM(
-	ctx context.Context,
-	c *reviewConfig,
-	client *github.Client,
-	issues []*github.Issue,
-	reviews map[string]review,
-) error {
-	for _, issue := range issues {
-		if !issue.IsPullRequest() {
-			continue
-		}
-		pr := issue
-		owner, repo := gh.GetRepository(pr)
-		number := pr.GetNumber()
-		prReviews, err := gh.PullRequestsListReviews(ctx, client, owner, repo, number)
-		if err != nil {
-			return err
-		}
-		log.Debug("LGTM: ", debug.PrettyFormat(prReviews))
-		for _, prReview := range prReviews {
-			login := prReview.GetUser().GetLogin()
-			if c.isUserBlocked(login) {
-				continue
-			}
-			if login == issue.GetUser().GetLogin() {
-				// Do not count author's comments.
-				continue
-			}
-			if !c.withinTimeRange(prReview.GetSubmittedAt().Time) {
-				continue
-			}
-			if prReview.GetState() == "APPROVED" || c.isCommentLGTM(prReview.GetBody()) {
-				review := reviews[login]
-				review.prLGTMs++
-				reviews[login] = review
-			}
-		}
-	}
-	return nil
-}
-
-// Collect review.prComments.
-func collectPRReviewComments(
+func collectPRLGTMAndReviewComments(
 	ctx context.Context,
 	c *reviewConfig,
 	client *github.Client,
@@ -442,16 +405,20 @@ func collectPRReviewComments(
 				continue
 			}
 
+			review := reviews[login]
+			// Count LGTM.
+			if prReview.GetState() == "APPROVED" || c.isCommentLGTM(prReview.GetBody()) {
+				review.prLGTMs++
+			}
+			// Count inline review comments.
 			reviewComments, err := gh.PullRequestsListReviewComments(ctx, client, owner, repo, number, *prReview.ID)
 			if err != nil {
 				return err
 			}
-			review := reviews[login]
 			review.prComments += len(reviewComments)
 			reviews[login] = review
 		}
 	}
-
 	return nil
 }
 
