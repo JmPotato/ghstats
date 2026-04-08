@@ -16,6 +16,7 @@ allow-users = [
   "okJiang",
   "ystaticy",
   "liyishuai",
+  "YuhaoZhang00",
 ]
 block-comments = [
   "/run-",
